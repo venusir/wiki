@@ -91,59 +91,81 @@ JavaScript
 /**
  * ==============================================================================
  * 【脚本功能】
- * 本脚本是一个轻量级的流量监控代理（Logger）。它拦截经过 Cloudflare CDN 的所有请求，
- * 在不影响用户访问速度的前提下，异步将访问日志（含 IP、URL、状态码、User-Agent 等）
- * 实时投递至第三方高性能日志平台 Axiom 进行存储与分析。
- * * 【使用方法与获取路径详见存档指南】
+ * 本脚本是一个高级流量监控代理（Logger）。它拦截经过 Cloudflare CDN 的所有请求，
+ * 异步将访问日志实时投递至第三方日志平台 Axiom。
+ * * 【本次更新】
+ * 1. 修正了 `host` 字段的提取逻辑：直接从 HTTP 请求头获取用户实际访问的域名（Host），
+ * 而不是 Worker 自身的节点地址。
+ * 2. 优化了 `url` 字段，移除了域名前缀，仅保留路径与查询参数（如 `/index.html?id=1`）。
+ * 3. 继续保持对环境变量（AXIOM_DATASET, AXIOM_TOKEN）的支持和 User-Agent 的智能精简。
+ * * 【使用方法】
+ * 1. 将本脚本全部代码复制并替换进 Cloudflare Worker。
+ * 2. 确保在 Worker 的「Settings」->「Variables」中配置了 `AXIOM_DATASET` 和 `AXIOM_TOKEN`。
  * ==============================================================================
  */
 
 export default {
   async fetch(request, env, ctx) {
-    // ================== 【用户配置区】 ==================
-    // 1. 替换为你在 Axiom 创建的数据集(Dataset)名称
-    const AXIOM_DATASET = 'cloudflare-logs'; 
-    
-    // 2. 替换为你在 Axiom 申请的具有 Ingest 权限的 API Token
-    const AXIOM_TOKEN = 'Bearer xat-xxxxxx你的Token';
-    // ====================================================
-
     // 1. 正常放行请求，获取源站或缓存的响应
     const response = await fetch(request);
 
-    // 2. 构造符合 Axiom 接收格式的日志对象（必须放入一个数组中）
+    // 2. 提取并智能优化 User-Agent 字段
+    const rawUserAgent = request.headers.get('User-Agent') || 'Unknown';
+    let shortUserAgent = rawUserAgent;
+    
+    if (rawUserAgent.includes('Googlebot')) shortUserAgent = 'Bot: Googlebot';
+    else if (rawUserAgent.includes('Bingbot')) shortUserAgent = 'Bot: Bingbot';
+    else if (rawUserAgent.includes('curl')) shortUserAgent = 'Tool: curl';
+    else if (rawUserAgent.includes('Go-http-client')) shortUserAgent = 'Tool: Go-client';
+    else {
+      // 普通浏览器日志太长，只截取前 60 个字符，兼顾识别度和存储体积
+      shortUserAgent = rawUserAgent.length > 60 ? rawUserAgent.substring(0, 60) + '...' : rawUserAgent;
+    }
+
+    // 3. 解析 URL，仅保留路径和参数
+    const urlObj = new URL(request.url);
+    const cleanUrl = urlObj.pathname + urlObj.search;
+
+    // 4. 【核心修正】提取用户实际访问的网站地址（Host 头）
+    // 如果获取不到，则降级使用 url 中的 hostname
+    const actualHost = request.headers.get('Host') || urlObj.hostname;
+
+    // 5. 构造符合 Axiom 接收格式的结构化日志对象
     const logData = [{
-      _time: new Date().toISOString(), // Axiom 推荐使用 _time 作为主时间戳字段
-      ip: request.headers.get('CF-Connecting-IP'),
-      country: request.cf?.country || 'Unknown',
-      colo: request.cf?.colo || 'Unknown', // 流量经过的 Cloudflare 边缘数据中心机场码（如 HKG, SFO）
-      url: request.url,
+      _time: new Date().toISOString(),
+      host: actualHost,                    // 【已修正】用户实际访问的地址（如 www.yourdomain.com）
+      url: cleanUrl,                       // 仅保留路径与参数（如 /posts/123）
       method: request.method,
       status: response.status,
-      userAgent: request.headers.get('User-Agent'),
+      ip: request.headers.get('CF-Connecting-IP'),
+      country: request.cf?.country || 'Unknown',
+      colo: request.cf?.colo || 'Unknown',
+      userAgent: shortUserAgent,
     }];
 
-    // 3. 拼接 Axiom 官方的标准 Ingest API 地址
-    const axiomEndpoint = `https://api.axiom.co/v1/datasets/${AXIOM_DATASET}/ingest`;
+    // 6. 检查环境变量并异步投递日志
+    if (env.AXIOM_DATASET && env.AXIOM_TOKEN) {
+      const axiomEndpoint = `https://api.axiom.co/v1/datasets/${env.AXIOM_DATASET}/ingest`;
 
-    // 4. 使用 ctx.waitUntil 纯异步发送到 Axiom
-    // 这样能保证日志投递在后台静默执行，完全不增加用户下载网页的延迟
-    ctx.waitUntil(
-      fetch(axiomEndpoint, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': AXIOM_TOKEN
-        },
-        body: JSON.stringify(logData), // Axiom 接收数组格式的 JSON 投递
-      }).then(res => {
-        if (!res.ok) {
-          console.error('Axiom 日志投递失败，状态码:', res.status);
-        }
-      }).catch(err => console.error('网络错误，日志发送失败:', err))
-    );
+      ctx.waitUntil(
+        fetch(axiomEndpoint, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': env.AXIOM_TOKEN
+          },
+          body: JSON.stringify(logData),
+        }).then(res => {
+          if (!res.ok) {
+            console.error('Axiom 投递失败，状态码:', res.status);
+          }
+        }).catch(err => console.error('Axiom 网络错误:', err))
+      );
+    } else {
+      console.warn('Worker 环境变量 AXIOM_DATASET 或 AXIOM_TOKEN 未配置，日志未投递。');
+    }
 
-    // 5. 立即为访客返回网页响应
+    // 7. 立即为访客返回网页响应
     return response;
   },
 };

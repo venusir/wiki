@@ -1,6 +1,6 @@
 # Update China IP
 
-```
+```routeros
 :log info "start download address-list.rsc ..."
 /tool fetch http-method=get url=https://raw.githubusercontent.com/zealic/autorosvpn/master/address-list.rsc
 :log info "address-list.rsc downloaded."

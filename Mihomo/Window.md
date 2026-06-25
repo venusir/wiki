@@ -1,3 +1,5 @@
+# mihomo Windows 裸核部署
+
 ### 1. 下载 mihomo 核心文件并解压
 
 > 下载文件解压得到exe文件,创建核心目录并放入exe文件
@@ -12,7 +14,7 @@ https://github.com/MetaCubeX/mihomo/releases/download/v1.19.5/mihomo-windows-amd
 
 > 在核心同级目录下创建 mihomo.vbs 文件
 
-```
+```vbscript
 set mihomo = CreateObject("WScript.Shell")
 mihomo.Run "mihomo-windows-amd64.exe -d .", 0
 ```

@@ -348,17 +348,43 @@ git push origin main
 
 > 注意：2021 年 8 月起 GitHub 已禁止账号密码直接认证，HTTPS 也需要用 Token 代替密码。
 
-### 1. 生成 Personal Access Token
+### 1. 生成 Token（二选一）
+
+GitHub 提供两种 Token，推荐选 **Fine-grained**（更安全）。
+
+#### 方式 A：Fine-grained token（推荐）
+
+更安全的做法——只给**单个仓库**的只读权限，权限最小化：
+
+1. 登录 GitHub → 右上角头像 → **Settings**
+2. 左侧菜单拉到底 → **Developer settings**
+3. **Personal access tokens** → **Fine-grained tokens**
+4. 点击 **Generate new token**
+5. Token name：填写名称，如 `debian-readonly`
+6. Expiration：必须设置过期时间（最长 1 年，到期后重新生成即可）
+7. Resource owner：选择你的账号
+8. Repository access → 选 **Only select repositories** → 选择你需要的仓库
+9. Permissions → **Repository permissions**：
+   - **Contents**：设为 **Read-only**（只读）
+   - 其他保持 **No access** 即可
+10. 点击 **Generate token**
+11. ⚠️ **立刻复制 token**，页面刷新后无法再次查看
+
+#### 方式 B：Classic token（简单）
+
+权限范围大（所有仓库），胜在操作简单：
 
 1. 登录 GitHub → 右上角头像 → **Settings**
 2. 左侧菜单拉到底 → **Developer settings**
 3. **Personal access tokens** → **Tokens (classic)**
 4. 点击 **Generate new token (classic)**
 5. Note：填写名称，如 `debian-readonly`
-6. Expiration：按需选择（推荐自定义或 `No expiration`）
+6. Expiration：按需选择（支持 `No expiration` 永不过期）
 7. Scope（权限）勾选 **`repo`**（全部勾上即可访问私有仓库）
 8. 点击 **Generate token**
 9. ⚠️ **立刻复制 token**，页面刷新后无法再次查看
+
+> **两种 Token 的区别：** Fine-grained 可精确到单个仓库 + 只读权限，但最长 1 年；Classic 一次性授权所有仓库，但可以永不过期。个人自用选 Classic 最简单，讲究安全选 Fine-grained。
 
 ### 2. 克隆私有仓库
 
@@ -366,8 +392,10 @@ git push origin main
 git clone https://github.com/username/repo-name.git
 ```
 
-- 用户名：填你的 GitHub 用户名
-- 密码：粘贴刚才复制的 **Token**（不是 GitHub 登录密码）
+- **用户名：** 填你的 GitHub 用户名
+- **密码：** 粘贴刚才复制的 **Token**（不是 GitHub 登录密码）
+  - Fine-grained token 格式：`github_pat_11A...`
+  - Classic token 格式：`ghp_xxxxxxxx...`
 
 ### 3. 缓存凭据（可选）
 

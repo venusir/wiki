@@ -307,7 +307,7 @@ fi
 
 ---
 
-## 附：完整操作速查
+## 附一：SSH 方式完整操作速查
 
 ```bash
 # 1. 安装 Git
@@ -338,6 +338,59 @@ cd repo-name
 git add .
 git commit -m "描述你的改动"
 git push origin main
+```
+
+---
+
+## 附二：仅需拉取 — 使用 HTTPS + Token
+
+如果你只需要克隆私有仓库、没有推送权限的需求，用 HTTPS + Token 比 SSH 更简单，省去生成密钥的步骤。
+
+> 注意：2021 年 8 月起 GitHub 已禁止账号密码直接认证，HTTPS 也需要用 Token 代替密码。
+
+### 1. 生成 Personal Access Token
+
+1. 登录 GitHub → 右上角头像 → **Settings**
+2. 左侧菜单拉到底 → **Developer settings**
+3. **Personal access tokens** → **Tokens (classic)**
+4. 点击 **Generate new token (classic)**
+5. Note：填写名称，如 `debian-readonly`
+6. Expiration：按需选择（推荐自定义或 `No expiration`）
+7. Scope（权限）勾选 **`repo`**（全部勾上即可访问私有仓库）
+8. 点击 **Generate token**
+9. ⚠️ **立刻复制 token**，页面刷新后无法再次查看
+
+### 2. 克隆私有仓库
+
+```bash
+git clone https://github.com/username/repo-name.git
+```
+
+- 用户名：填你的 GitHub 用户名
+- 密码：粘贴刚才复制的 **Token**（不是 GitHub 登录密码）
+
+### 3. 缓存凭据（可选）
+
+避免每次操作都输入 Token：
+
+```bash
+git config --global credential.helper store
+```
+
+首次认证后凭据会被保存，后续 `git pull` 等操作无需再输入。
+
+### 4. 以后想推送怎么办？
+
+HTTPS + Token 方式本身就支持推送（只要 Token 勾了 `repo` 全权限）。如果将来想切换到 SSH：
+
+```bash
+# 查看当前远程地址
+git remote -v
+
+# 改为 SSH 地址
+git remote set-url origin git@github.com:username/repo-name.git
+
+# 然后配置好 SSH 密钥即可推送
 ```
 
 ---

@@ -2,7 +2,7 @@
 
 > 存档日期：2026-09-05
 >
-> 背景：首轮用 Windows 11 **家庭版**部署完成后发现**家庭版无远程桌面(RDP)主机功能**(与激活无关,按版本划分),决定**重装企业版**。
+> 背景：本文为 Win11 客厅 HTPC 的重装流程存档。**需安装企业版(或专业版)才具备远程桌面(RDP)主机功能**,故重装为企业版。
 >
 > 环境：PVE 9.2(内核 7.0.6-2-pve)+ i3-12100 + RX 6650 XT(03:00.0 显卡 / 03:00.1 音频,独立 IOMMU group)+ Xbox 无线适配器(`045e:02fe`)+ WD 1TB 直通盘 + Win11 虚拟机(VMID 200,`win11-htpc`)
 >
@@ -27,7 +27,7 @@
 
 1. 下载 Windows 11 Enterprise ISO
    - 授权/评估渠道自行解决(微软 Eval Center 提供 90 天评估版;组织授权走 VLSC)。**评估版注意到期时间**,24h 常开 HTPC 建议用有长期授权的来源
-   - 与家庭版同样:下载**ISO 磁盘映像**,不是 Media Creation Tool
+   - 下载**ISO 磁盘映像**,不是 Media Creation Tool
 2. 上传:**不要用浏览器上传大文件**(上次卡 100%)。Windows 本机 PowerShell 直传:
 
 ```powershell
@@ -129,9 +129,9 @@ reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon" /v DefaultP
 
 ---
 
-## 6. 启用远程桌面(RDP)——重装企业版的核心理由
+## 6. 启用远程桌面(RDP)
 
-企业版/专业版才有 RDP 主机(家庭版无此功能,激活也变不出来):
+> **注意:RDP 主机功能仅企业版/专业版及以上版本提供**,本文安装企业版即为启用它。
 
 1. `Win + I` → 系统 → 远程桌面 → 打开(或命令行):
    ```cmd
@@ -211,10 +211,9 @@ qm start 200
 | 4 | 装完重启仍要密码 | `DefaultUserName` 与账户名不一致 / netplwiz 勾选框被隐藏 | 解锁 `DevicePasswordLessBuildVersion=0`;核对账户名 |
 | 5 | noVNC「无法连接到服务器」 | 旧控制台会话占住单会话名额 | 关旧页签或 `systemctl restart pveproxy` |
 | 6 | Guest Agent 显示未运行 | qemu-ga 服务未装(MSI 装完仍缺) | 光驱 `qemu-ga\` 目录单独装 MSI;非必需可跳过 |
-| 7 | 家庭版无远程桌面 | RDP 主机按版本划分,家庭版砍掉 | 换企业版/Pro(本文缘由)或第三方远程(RustDesk) |
-| 8 | PCI 设备编辑框无「启用」勾选 | GUI 没有该选项 | 用「移除/重新添加」或 `qm set -delete hostpci0` |
-| 9 | attach 脚本报"未找到 win11-htpc VM" | conf 格式 `name: win11-htpc`(冒号后空格),正则漏空格 | 已修复(用 `--vmid 200` 亦可绕过) |
-| 10 | 虚拟化/VM 环境下安装器磁盘不可见 | 无 vioscsi 驱动 | virtio-win 光驱 `vioscsi\w11\amd64` |
+| 7 | PCI 设备编辑框无「启用」勾选 | GUI 没有该选项 | 用「移除/重新添加」或 `qm set -delete hostpci0` |
+| 8 | attach 脚本报"未找到 win11-htpc VM" | conf 格式 `name: win11-htpc`(冒号后空格),正则漏空格 | 已修复(用 `--vmid 200` 亦可绕过) |
+| 9 | 虚拟化/VM 环境下安装器磁盘不可见 | 无 vioscsi 驱动 | virtio-win 光驱 `vioscsi\w11\amd64` |
 
 ---
 

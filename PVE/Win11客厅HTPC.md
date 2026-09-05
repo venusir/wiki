@@ -472,7 +472,7 @@ Flirc 键位映射建议（在你已有的 Flirc 配置上调整）：
 
 ## 相关文档（扩展阅读，非前置依赖）
 
-- [Win11企业版重装部署存档](Win11企业版重装部署存档.md) — 家庭版无 RDP 决定重装企业版;含全流程实测步骤与踩坑记录
+- [Win11企业版重装](Win11企业版重装.md) — 重装企业版以启用远程桌面(RDP)的实测流程与踩坑记录
 - [Xbox适配器直通Bazzite](Xbox适配器直通Bazzite.md) — Linux 客户机下手柄适配器固件/SELinux 排错（Windows 下无需这些步骤，作为对照参考）
 - [Bazzite直通硬盘Steam库](Bazzite直通硬盘Steam库.md) — 直通盘挂载与「禁用显卡回控制台」背景
 - [Flirc遥控启动虚拟机](Flirc遥控启动虚拟机.md) — Flirc + PVE API 遥控开机方案（本文第 9 节遥控方案基于同一硬件）

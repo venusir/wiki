@@ -88,7 +88,7 @@ if [[ -z "$VMID" ]]; then
     candidates=()
     for f in /etc/pve/qemu-server/*.conf; do
         [[ -e "$f" ]] || continue
-        if grep -qi '^name:win11-htpc' "$f"; then
+        if grep -qi '^name:[[:space:]]*win11-htpc' "$f"; then
             candidates+=("${f##*/}")
         fi
     done

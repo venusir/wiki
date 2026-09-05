@@ -27,6 +27,7 @@
 #   --no-usb        不接 Xbox 适配器(稍后手动加)
 #   --gpu ADDR      显卡 PCI 地址(默认自动检测,如 03:00)
 #   --dry-run       只展示将执行的 qm set,不执行
+#   --debug         开启 set -x 逐步执行跟踪(定位静默退出问题时用)
 #   -h, --help      帮助
 # =============================================================================
 set -euo pipefail
@@ -37,6 +38,7 @@ NO_DISK=0
 NO_USB=0
 GPU_ADDR=""
 DRY_RUN=0
+DEBUG=0
 
 usage() {
     sed -n '2,40p' "$0" | sed 's/^# \{0,1\}//'
@@ -56,10 +58,25 @@ while [[ $# -gt 0 ]]; do
         --no-usb)    NO_USB=1; shift ;;
         --gpu)       [[ $# -ge 2 ]] || die "--gpu 需要参数值"; GPU_ADDR="$2"; shift 2 ;;
         --dry-run)   DRY_RUN=1; shift ;;
+        --debug)     DEBUG=1; shift ;;
         -h|--help)   usage ;;
         *) die "未知参数: $1(用 -h 查看帮助)" ;;
     esac
 done
+
+# ---- 运行横幅与调试陷阱(任何一步失败都会打印行号,杜绝静默退出) ---------------
+echo "[启动] $(date '+%F %T') | $(basename "$0") | 参数: $* | 宿主机: $(hostname)"
+echo "[启动] 干跑(不执行): $([ $DRY_RUN -eq 1 ] && echo 是 || echo 否) | 调试跟踪: $([ $DEBUG -eq 1 ] && echo 开 || echo 关)"
+
+if [[ $DEBUG -eq 1 ]]; then
+    PS4='+[${LINENO}] '
+    set -x
+fi
+err_trap() {
+    echo "[失败] 脚本终止于第 $1 行,命令: $2(退出状态 $3)" >&2
+}
+trap 'err_trap "$LINENO" "$BASH_COMMAND" "$?"' ERR
+trap 'echo "[退出] $(date "+%F %T") $(basename "$0") 结束,状态 $?"' EXIT
 
 # ---- 预检 -------------------------------------------------------------------
 [[ $EUID -eq 0 ]] || die "请以 root 运行"
@@ -84,7 +101,7 @@ CONF="/etc/pve/qemu-server/$VMID.conf"
 [[ -e "$CONF" ]] || die "VMID $VMID 配置文件不存在"
 
 # VM 必须已关机
-STATUS=$(qm status "$VMID" | awk '{print $2}')
+STATUS=$(qm status "$VMID" | awk '{print $2}') || die "qm status 查询失败(VMID $VMID)"
 if [[ "$STATUS" != "stopped" ]]; then
     die "VM 当前状态为 $STATUS,必须关机后才能接入直通设备(请先在 Web UI 关机)"
 fi

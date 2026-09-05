@@ -27,6 +27,7 @@
 #   --iso-store NAME  ISO 所在存储(自动检测 local)
 #   --bridge NAME     网卡桥接(自动检测 vmbr0)
 #   --dry-run         只打印参数与将执行的 qm create,不实际创建
+#   --debug           开启 set -x 逐步执行跟踪(定位静默退出问题时用)
 #   -h, --help        帮助
 # =============================================================================
 set -euo pipefail
@@ -46,6 +47,7 @@ STORAGE=""
 ISO_STORE=""
 BRIDGE=""
 DRY_RUN=0
+DEBUG=0
 
 usage() {
     sed -n '2,40p' "$0" | sed 's/^# \{0,1\}//'
@@ -68,10 +70,25 @@ while [[ $# -gt 0 ]]; do
         --iso-store)    [[ $# -ge 2 ]] || die "--iso-store 需要参数值"; ISO_STORE="$2"; shift 2 ;;
         --bridge)       [[ $# -ge 2 ]] || die "--bridge 需要参数值"; BRIDGE="$2"; shift 2 ;;
         --dry-run)      DRY_RUN=1; shift ;;
+        --debug)        DEBUG=1; shift ;;
         -h|--help)      usage ;;
         *) die "未知参数: $1(用 -h 查看帮助)" ;;
     esac
 done
+
+# ---- 运行横幅与调试陷阱(任何一步失败都会打印行号,杜绝静默退出) ---------------
+echo "[启动] $(date '+%F %T') | $(basename "$0") | 参数: $* | 宿主机: $(hostname)"
+echo "[启动] 干跑(不执行): $([ $DRY_RUN -eq 1 ] && echo 是 || echo 否) | 调试跟踪: $([ $DEBUG -eq 1 ] && echo 开 || echo 关)"
+
+if [[ $DEBUG -eq 1 ]]; then
+    PS4='+[${LINENO}] '
+    set -x
+fi
+err_trap() {
+    echo "[失败] 脚本终止于第 $1 行,命令: $2(退出状态 $3)" >&2
+}
+trap 'err_trap "$LINENO" "$BASH_COMMAND" "$?"' ERR
+trap 'echo "[退出] $(date "+%F %T") $(basename "$0") 结束,状态 $?"' EXIT
 
 # ---- 预检 -------------------------------------------------------------------
 [[ $EUID -eq 0 ]] || die "请以 root 运行"
@@ -115,14 +132,17 @@ if [[ -z "$ISO_STORE" ]]; then
     ISO_STORE=$(pvesm status --content iso 2>/dev/null | awk 'NR>1{print $1; exit}')
     [[ -n "$ISO_STORE" ]] || die "未找到可用 ISO 存储,请用 --iso-store 指定"
 fi
-ISO_DIR=$(pvesm path "$ISO_STORE" 2>/dev/null)/template/iso
+ISO_BASE=$(pvesm path "$ISO_STORE" 2>/dev/null) || die "无法获取 ISO 存储 $ISO_STORE 的路径(pvesm path 失败)"
+ISO_DIR="$ISO_BASE/template/iso"
 mkdir -p "$ISO_DIR" || die "无法创建 ISO 目录: $ISO_DIR"
+echo "[信息] ISO 存储 $ISO_STORE → 目录 $ISO_DIR"
 
 # 检测/下载 ISO
-detect_iso() {  # $1=glob 模式
+detect_iso() {  # $1=glob 模式;输出首个匹配文件名;找不到输出为空并返回 0(避免 set -e 静默击杀)
     local found
     found=$(find "$ISO_DIR" -maxdepth 1 -name "$1" 2>/dev/null | head -n 1 || true)
-    [[ -n "$found" ]] && basename "$found"
+    [[ -n "$found" ]] || return 0
+    basename "$found"
 }
 
 if [[ -z "$WIN_ISO" ]]; then
@@ -134,6 +154,7 @@ if [[ -z "$WIN_ISO" ]]; then
     fi
 fi
 [[ -f "$ISO_DIR/$WIN_ISO" ]] || die "Windows ISO 不存在: $ISO_DIR/$WIN_ISO"
+echo "[信息] Windows ISO: $WIN_ISO"
 
 if [[ -z "$VIRTIO_ISO" ]]; then
     VIRTIO_ISO=$(detect_iso 'virtio-win*.iso')
@@ -155,6 +176,7 @@ if [[ -z "$VIRTIO_ISO" ]]; then
     fi
 fi
 [[ $DRY_RUN -eq 1 ]] || [[ -f "$ISO_DIR/$VIRTIO_ISO" ]] || die "virtio-win ISO 不存在: $ISO_DIR/$VIRTIO_ISO"
+echo "[信息] virtio-win ISO: $VIRTIO_ISO"
 
 # 检测桥接
 if [[ -z "$BRIDGE" ]]; then

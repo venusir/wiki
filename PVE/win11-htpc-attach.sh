@@ -39,6 +39,7 @@ NO_USB=0
 GPU_ADDR=""
 DRY_RUN=0
 DEBUG=0
+rc=0
 
 usage() {
     sed -n '2,40p' "$0" | sed 's/^# \{0,1\}//'
@@ -76,7 +77,7 @@ err_trap() {
     echo "[失败] 脚本终止于第 $1 行,命令: $2(退出状态 $3)" >&2
 }
 trap 'err_trap "$LINENO" "$BASH_COMMAND" "$?"' ERR
-trap 'echo "[退出] $(date "+%F %T") $(basename "$0") 结束,状态 $?"' EXIT
+trap 'rc=$?; echo "[退出] $(date "+%F %T") $(basename "$0") 结束,状态 $rc"' EXIT
 
 # ---- 预检 -------------------------------------------------------------------
 [[ $EUID -eq 0 ]] || die "请以 root 运行"

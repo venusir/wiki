@@ -48,6 +48,7 @@ ISO_STORE=""
 BRIDGE=""
 DRY_RUN=0
 DEBUG=0
+rc=0
 
 usage() {
     sed -n '2,40p' "$0" | sed 's/^# \{0,1\}//'
@@ -88,7 +89,7 @@ err_trap() {
     echo "[失败] 脚本终止于第 $1 行,命令: $2(退出状态 $3)" >&2
 }
 trap 'err_trap "$LINENO" "$BASH_COMMAND" "$?"' ERR
-trap 'echo "[退出] $(date "+%F %T") $(basename "$0") 结束,状态 $?"' EXIT
+trap 'rc=$?; echo "[退出] $(date "+%F %T") $(basename "$0") 结束,状态 $rc"' EXIT
 
 # ---- 预检 -------------------------------------------------------------------
 [[ $EUID -eq 0 ]] || die "请以 root 运行"
@@ -132,8 +133,13 @@ if [[ -z "$ISO_STORE" ]]; then
     ISO_STORE=$(pvesm status --content iso 2>/dev/null | awk 'NR>1{print $1; exit}')
     [[ -n "$ISO_STORE" ]] || die "未找到可用 ISO 存储,请用 --iso-store 指定"
 fi
-ISO_BASE=$(pvesm path "$ISO_STORE" 2>/dev/null) || die "无法获取 ISO 存储 $ISO_STORE 的路径(pvesm path 失败)"
-ISO_DIR="$ISO_BASE/template/iso"
+# ISO 存储挂载路径:目录类存储从 storage.cfg 读 path(pvesm path 需要"存储:卷"格式,不能只传存储名)
+ISO_PATH=$(awk -v t="$ISO_STORE:" '$1==t {f=1} f && $1=="path" {print $2; exit}' /etc/pve/storage.cfg || true)
+if [[ -z "$ISO_PATH" && "$ISO_STORE" == "local" && -d /var/lib/vz ]]; then
+    ISO_PATH="/var/lib/vz"
+fi
+[[ -n "$ISO_PATH" ]] || die "无法确定存储 $ISO_STORE 的挂载路径,请检查 /etc/pve/storage.cfg 或用 --iso-store 指定目录类存储"
+ISO_DIR="$ISO_PATH/template/iso"
 mkdir -p "$ISO_DIR" || die "无法创建 ISO 目录: $ISO_DIR"
 echo "[信息] ISO 存储 $ISO_STORE → 目录 $ISO_DIR"
 

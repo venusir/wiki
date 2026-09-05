@@ -283,12 +283,24 @@ hostpci1: 0000:01:00.1,pcie=1
 
 ### 6.3 黑屏/无画面排查（回退法）
 
-直通卡没画面、需要回 PVE 控制台排查时（方法沿用 Bazzite 时代已验证流程）：
+直通卡没画面、需要回 PVE 控制台排查时。注意:**PVE Web UI 的 PCI 设备没有「启用」勾选项**,开关直通 = 移除/重新添加设备。命令行方式(V 关机状态下,最清晰可逆):
 
-1. 关机 → `硬件 → PCI 设备（显卡）→ 编辑 → 取消勾选「启用」`
-2. `硬件 → 显示 → 改回「标准 VGA (std)」`
-3. 开机 → noVNC 控制台恢复画面 → 排查（驱动问题、显示输出设置等）
-4. 修复后重复 6.1 步骤恢复直通
+```bash
+# 回退到 noVNC(等效"临时禁用显卡")
+qm set 200 -delete hostpci0
+qm set 200 -vga std
+qm start 200
+
+# 恢复直通(办完事后)
+qm stop 200
+qm set 200 -hostpci0 03:00.0,pcie=1,x-vga=1
+qm set 200 -vga none
+qm start 200
+```
+
+GUI 等价操作:硬件 → 选中 PCI Device(03:00.0)→ **移除**;硬件 → 显示 → **标准 VGA (std)**;恢复时硬件 → **添加 → PCI 设备** → 选 03:00.0 → 勾选 PCI-Express 与 Primary GPU → 显示设回「无 (none)」。音频(03:00.1)独立分组,全程不用动。
+
+回退后 noVNC 恢复画面即可排查;长期远程管理建议直接启用 Windows 远程桌面(RDP),不必反复移除显卡。
 
 常见原因：HDMI 线插错口（插到主板核显了）、电视未切到对应输入源、AMD 驱动未装完（首次进系统用 Microsoft Basic Display 也能点亮）。
 
@@ -460,6 +472,7 @@ Flirc 键位映射建议（在你已有的 Flirc 配置上调整）：
 
 ## 相关文档（扩展阅读，非前置依赖）
 
+- [Win11企业版重装部署存档](Win11企业版重装部署存档.md) — 家庭版无 RDP 决定重装企业版;含全流程实测步骤与踩坑记录
 - [Xbox适配器直通Bazzite](Xbox适配器直通Bazzite.md) — Linux 客户机下手柄适配器固件/SELinux 排错（Windows 下无需这些步骤，作为对照参考）
 - [Bazzite直通硬盘Steam库](Bazzite直通硬盘Steam库.md) — 直通盘挂载与「禁用显卡回控制台」背景
 - [Flirc遥控启动虚拟机](Flirc遥控启动虚拟机.md) — Flirc + PVE API 遥控开机方案（本文第 9 节遥控方案基于同一硬件）

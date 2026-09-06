@@ -253,4 +253,4 @@ qm config <vmid> | grep -E '^(hostpci|usb|vga|scsi|startup|boot|agent|ostype)'
 - [README.md](README.md) — 目录索引与快速开始
 - [显卡直通](../显卡直通.md) / [硬盘直通](../硬盘直通.md) / [Xbox直通](../Xbox直通.md) — PVE 通用直通指南(客户机无关)
 - [Bazzite直通硬盘Steam库](../Bazzite直通硬盘Steam库.md) — Linux 客户机直通盘案例
-- [Flirc遥控启动虚拟机](../Flirc遥控启动虚拟机.md) — PVE API 遥控开机方案
+- [Flirc遥控开关机](../Flirc遥控开关机.md) — PVE API 遥控开机/关机方案

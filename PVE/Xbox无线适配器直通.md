@@ -25,6 +25,7 @@ qm config <vmid> | grep usb
 - USB/PCI 配置改动后**必须完全关机再开机**(重启不生效)
 - 同一 USB 设备**不能同时配给两个 VM**(占用冲突)
 - 设备物理拔插后,VM 内可能失联 → 冷启动恢复
+- 宿主驱动可能"抢走"已直通设备:即使直通成功,宿主已加载的驱动(mt76 等)也会先占用 → 见 §4
 
 ## 2. Xbox 无线适配器型号与配对
 
@@ -37,23 +38,113 @@ qm config <vmid> | grep usb
 
 配对流程:按适配器侧圆键(快闪)→ 30cm 内按住手柄顶部小圆钮 → 灯常亮即连上(以后开机自动回连)。
 
-## 3. 客户机差异
+**固件与电池提醒**:配对失败先排除两件事——①换全新碱性电池(电压不足表现为"能闪连不上");②固件过旧(Windows 下用 Xbox Accessories 有线刷手柄固件、可选更新装适配器驱动包)。
 
-| | Windows | Linux(如 Bazzite) |
-| --- | --- | --- |
-| 驱动 | 原生免驱 | xone/xow 第三方 |
-| 设备位置 | 设备管理器 → **网络适配器**分类(正常!它按网络设备枚举) | `/sys/class/xone/dongle0` |
-| 固件 | Windows Update / Xbox Accessories 更新 | xow 固件包 + 路径/SELinux 处理 |
-| 配对 | 顶部小圆钮,即插即用 | 需固件链路完整(见存档文档) |
+## 3. 客户机差异与完整排错
 
-Linux 客户机完整排错见 [Xbox适配器直通Bazzite.md](Xbox适配器直通Bazzite.md)(固件缺失/SELinux/mt76 冲突三链路)。
+### Windows 客户机
 
-## 4. 宿主侧冲突与卡死
+- 原生免驱;设备出现在设备管理器 → **网络适配器**分类(正常!它按网络设备枚举,不提供网络功能)
+- 配对/固件:见 §2;Xbox Accessories(微软商店)识别与更新
+- RDP 会话不转发手柄输入——测试/使用须在控制台会话(物理显示或 `mstsc /admin`)
 
-- **mt76 无线网卡驱动抢占适配器**(USB 枚举正常但客户机拿不到)→ 宿主黑名单 mt76 系列
-- **适配器硬件卡死**(重启/休眠后不响应)→ 硬复位:拔插 10 秒;`usbreset 045e:02fe`;终极:BIOS 开 **ErP Ready**(S4+S5,彻底断 USB 供电)
+### Linux 客户机(xone/xow 驱动)深度排错
 
-## 5. 排错流程(按序)
+> 案例背景:2026-06 实测于 Bazzite(该方案已退役),排错链路对任何 Linux 桌面客机通用。
+> 典型症状:驱动已加载(`lsmod` 有 xone_dongle)、设备已绑定,但 `/sys/class/xone/` 不存在、无法进入配对。根因是**固件加载链断裂**——SELinux 阻止 → 固件文件缺失/路径不对 → 驱动初始化失败,常叠加宿主驱动抢占。
+
+**链路 ① 宿主禁用 mt76 冲突驱动(PVE 宿主执行)**
+
+```bash
+sudo tee /etc/modprobe.d/blacklist-mt76.conf << 'EOF'
+blacklist mt76
+blacklist mt76x2u
+blacklist mt76x2_common
+blacklist mt76x02_usb
+blacklist mt76_usb
+blacklist mt76x02_lib
+
+install mt76 /bin/false
+install mt76x2u /bin/false
+install mt76x2_common /bin/false
+install mt76x02_usb /bin/false
+install mt76_usb /bin/false
+install mt76x02_lib /bin/false
+EOF
+sudo update-initramfs -u -k all && sudo reboot
+lsmod | grep mt76        # 重启后应无输出
+```
+
+只影响 MediaTek 芯片 USB 无线网卡,不影响键鼠/U 盘。
+
+**链路 ② 固件提取与放置(Linux 客机内)**
+
+```bash
+# 1. 提取工具 + 微软驱动包解出固件
+sudo rpm-ostree install cabextract      # 发行版对应包管理器安装
+curl -L -o driver.cab 'http://download.windowsupdate.com/c/msdownload/update/driver/drvs/2017/07/1cd6a87c-623f-4407-a52d-c31be49e925c_e19f60808bdcbfbd3c3df6be3e71ffc52e43261e.cab'
+cabextract -F FW_ACC_00U.bin driver.cab
+mv FW_ACC_00U.bin xow_dongle.bin
+
+# 2. 放置固件(不可变根文件系统如 Bazzite 不能写 /lib/firmware,用可写路径)
+sudo mkdir -p /usr/local/lib/firmware
+sudo cp xow_dongle.bin /usr/local/lib/firmware/
+
+# 3. 路径兜底:软链接覆盖驱动可能查找的所有文件名
+sudo ln -sf /usr/local/lib/firmware/xow_dongle.bin /etc/firmware/xow_dongle.bin
+sudo ln -sf /usr/local/lib/firmware/xow_dongle.bin /etc/firmware/xow_dongle_045e_02fe.bin
+sudo ln -sf /usr/local/lib/firmware/xow_dongle.bin /etc/firmware/xow_dongle_045e_02e6.bin
+```
+
+**链路 ③ SELinux 放行(仅 SELinux 发行版,如 Fedora 系)**
+
+```bash
+# 临时验证
+sudo setenforce 0 && 重新插拔适配器 && ls /sys/class/xone/
+
+# 永久解决(audit2allow 生成策略模块)
+sudo rpm-ostree install policycoreutils-python-utils
+sudo ausearch -c 'xone-dongle' --raw | sudo audit2allow -M my-xone
+sudo semodule -i my-xone.pp
+```
+
+**链路 ④ 驱动/硬件复位**
+
+```bash
+sudo usbreset 045e:02fe                      # 软重置适配器(需 usbutils)
+# 重新绑定驱动
+echo "9-1:1.0" | sudo tee /sys/bus/usb/drivers/xone-dongle/unbind
+sleep 2
+echo "9-1:1.0" | sudo tee /sys/bus/usb/drivers/xone-dongle/bind
+```
+
+硬件卡死终极方案:BIOS 开启 **ErP Ready(S4+S5)**(Advanced → APM Configuration)——关机/休眠彻底切断 USB 端口供电,强制适配器硬件复位。注意这是 PVE 宿主物理 BIOS 设置,不是虚拟机 BIOS。
+
+**验证成功标志**
+
+```bash
+ls /sys/class/xone/                 # 出现 dongle0
+echo 1 | sudo tee /sys/class/xone/dongle0/led   # 强制进配对(替代物理按键)
+```
+
+LED 快闪后按住手柄顶部配对键即可连接。
+
+**关键经验**(教训表)
+
+| 经验 | 说明 |
+| --- | --- |
+| 驱动已加载 ≠ 正常工作 | `lsmod` 有输出也可能因固件未加载而无 dongle0 |
+| 只读根文件系统 | 固件放 `/usr/local/lib/firmware/` 而非 `/lib/firmware/` |
+| 宿主驱动会抢占 | 即使直通,宿主已加载驱动也可能先占用 |
+| SELinux 静默阻止 | `Permission firmware_load` 不会显示在 dmesg 的 xone 过滤里 |
+| ErP Ready 治卡死 | 适配器休眠/重启后不工作的社区验证终极方案 |
+
+## 4. 宿主侧冲突与卡死(速查)
+
+- **mt76 抢占**:枚举正常但客机拿不到设备 → 宿主黑名单(mt76 全家桶,命令见 §3 Linux 链路①)
+- **适配器卡死**:拔插 10 秒 / `usbreset 045e:02fe` / BIOS ErP Ready(§3 链路④)
+
+## 5. 通用排错流程
 
 ```
 设备在客户机里看不到?
@@ -65,11 +156,14 @@ Linux 客户机完整排错见 [Xbox适配器直通Bazzite.md](Xbox适配器直�
   ├─ 换新电池(电压不足表现为"能闪连不上")
   ├─ 换 USB2 口/远离 USB3 设备(射频干扰)
   ├─ 冷启动 / 去掉 usb3=0 换通路
-  └─ 裸机 A/B 测试:适配器插真 Windows 电脑试配——能配=VM 链路问题;不能配=固件/硬件问题(数据线刷手柄固件或换适配器)
+  ├─ Windows 侧:可选更新/Xbox Accessories 更新固件
+  ├─ Linux 侧:按 §3 三链路排查(xone 固件链)
+  └─ 裸机 A/B 测试:适配器插真 Windows 电脑试配——能配=VM 链路问题;
+     不能配=固件/硬件问题(数据线刷手柄固件或换适配器)
 ```
 
 ## 6. 关联文档
 
 - [Windows虚拟机部署/Windows10-11虚拟机部署指南.md](Windows虚拟机部署/Windows10-11虚拟机部署指南.md) — 完整 Windows 部署流程
-- [Xbox适配器直通Bazzite.md](Xbox适配器直通Bazzite.md) — Linux 客户机固件/SELinux 排错案例
 - [显卡直通.md](显卡直通.md) / [硬盘直通.md](硬盘直通.md)
+- [Bazzite直通硬盘Steam库.md](Bazzite直通硬盘Steam库.md) — Linux 客户机直通盘使用案例

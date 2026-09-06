@@ -38,6 +38,9 @@ bash win11-htpc-attach.sh --vmid 200
 
 ## 关联文档(上层目录)
 
-- [PVE/Xbox适配器直通Bazzite.md](../Xbox适配器直通Bazzite.md) — USB 直通与宿主驱动冲突排错对照
+- [PVE/显卡直通.md](../显卡直通.md) — 通用:显卡 PCIe 直通(宿主准备/挂载/回退/排错)
+- [PVE/硬盘直通.md](../硬盘直通.md) — 通用:整盘/控制器直通与客户机侧使用
+- [PVE/Xbox无线适配器直通.md](../Xbox无线适配器直通.md) — 通用:USB 直通姿势 + Xbox 适配器完整案例
+- [PVE/Xbox适配器直通Bazzite.md](../Xbox适配器直通Bazzite.md) — Linux 客户机适配器排错对照(固件/SELinux/mt76)
 - [PVE/Bazzite直通硬盘Steam库.md](../Bazzite直通硬盘Steam库.md) — 整盘直通背景
 - [PVE/Flirc遥控启动虚拟机.md](../Flirc遥控启动虚拟机.md) — PVE API 遥控开机方案

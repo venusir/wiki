@@ -10,7 +10,7 @@
 | --- | --- |
 | [Windows10-11虚拟机部署指南.md](Windows10-11虚拟机部署指南.md) | ⭐ 唯一部署文档:主流程 + 踩坑表 + 命令速查 + 决策档案附录(从部署直接开始看这篇) |
 | [win11-htpc-deploy.sh](win11-htpc-deploy.sh) | 阶段 A:一键建机脚本(OVMF/TPM2.0/VirtIO 全参数) |
-| [win11-htpc-attach.sh](win11-htpc-attach.sh) | 阶段 B:系统装好后一键接入直通设备(显卡/USB/盘/自启) |
+| [attach-all.sh](../scripts/attach-all.sh) | 阶段 B:一键接入直通设备(显卡/音频/USB/盘/自启;客机无关,含 gpu/usb/disk 原语) |
 
 ## 快速开始
 
@@ -24,9 +24,11 @@ bash win11-htpc-deploy.sh
 
 # 3. noVNC 安装系统(按指南第 5 节,磁盘不可见时加载 vioscsi 驱动)
 
-# 4. 阶段 B:接入直通设备(系统装好、关机后)
-bash win11-htpc-attach.sh --vmid 200 --dry-run
-bash win11-htpc-attach.sh --vmid 200
+# 4. 拉取直通脚本并接入(系统装好、关机后)
+mkdir -p /root/scripts && cd /root/scripts
+for s in attach-gpu attach-usb attach-disk attach-all; do curl -fLO "https://raw.githubusercontent.com/venusir/wiki/main/PVE/scripts/$s.sh"; done
+bash /root/scripts/attach-all.sh --vmid 200 --dry-run
+bash /root/scripts/attach-all.sh --vmid 200
 ```
 
 ## 整理记录

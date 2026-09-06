@@ -7,7 +7,7 @@
 # 创建(Linux 客机,无 TPM/Secure Boot 需求):
 #   q35 + OVMF(UEFI,不预置 Secure Boot 密钥)+ host CPU + VirtIO SCSI
 #   + VirtIO 网卡 + Bazzite ISO 光驱
-# 注:直通设备接入不在此脚本——装完系统后复用 win11-htpc-attach.sh
+# 注:直通设备接入不在此脚本——装完系统后用 scripts/attach-all.sh(客机无关)
 #    (该脚本与客机系统无关,名字为历史遗留)
 #
 # 安全承诺:VMID 被占用拒绝创建;不执行任何删除操作
@@ -193,4 +193,5 @@ qm config "$VMID" | grep -E '^(name|bios|machine|efidisk0|scsihw|scsi0|net0|ide2
 echo
 log "下一步:"
 echo "  1. Web UI 打开该 VM 的 noVNC 控制台 → 启动 → 安装 Bazzite(按指南第 4 节)"
-echo "  2. 安装完成后按指南:启用 sshd → 关机 → 运行 win11-htpc-attach.sh 接入直通设备"
+echo "  2. 安装完成后按指南:启用 sshd → 关机 → 运行 attach-all.sh 接入直通设备"
+echo "     (bash /root/scripts/attach-all.sh --vmid $VMID,详见 Bazzite部署指南.md §6)"

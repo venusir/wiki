@@ -86,11 +86,14 @@ sudo steamos-session-select desktop    # 需要桌面模式时
 
 ```bash
 qm stop <vmid>
-bash win11-htpc-attach.sh --vmid <vmid> --dry-run    # 审:显卡/音频/usb0/盘/vga none/startup
-bash win11-htpc-attach.sh --vmid <vmid>              # 输 Y;交互选 WD 1TB
+# 脚本获取(scripts/ 家族,含 gpu/usb/disk 原语与 attach-all 组合)
+mkdir -p /root/scripts && cd /root/scripts
+for s in attach-gpu attach-usb attach-disk attach-all; do curl -fLO "https://raw.githubusercontent.com/venusir/wiki/main/PVE/scripts/$s.sh"; done
+bash /root/scripts/attach-all.sh --vmid <vmid> --dry-run    # 审:显卡/音频/usb0/盘/vga none/startup
+bash /root/scripts/attach-all.sh --vmid <vmid>              # 输 Y;交互选 WD 1TB
 ```
 
-> 复用 [win11-htpc-attach.sh](../Windows虚拟机部署/win11-htpc-attach.sh):其动作(显卡+音频 x-vga=1、显示 none、Xbox 适配器 usb0、直通盘、自启)与客机系统**无关**,脚本名是历史遗留,直接通用。
+> attach-all 组合执行:显卡+音频(x-vga=1)、显示 none、Xbox 适配器(默认 VID:PID 045e:02fe)、直通盘、自启——**客机无关**,Windows/Linux 通用。按需单挂某设备用原语脚本。
 
 **成功标志**(`qm config <vmid>`):
 
@@ -170,7 +173,7 @@ ls /sys/class/xone/        # 出现 dongle0 = 驱动正常
 ```bash
 # 建机 / 接入(宿主)
 bash bazzite-deploy.sh --dry-run && bash bazzite-deploy.sh
-bash /root/win11-htpc-attach.sh --vmid <vmid> --dry-run && bash /root/win11-htpc-attach.sh --vmid <vmid>
+bash /root/scripts/attach-all.sh --vmid <vmid> --dry-run && bash /root/scripts/attach-all.sh --vmid <vmid>
 
 # 回退 / 恢复直通(宿主)
 qm stop <vmid> && qm set <vmid> -delete hostpci0 && qm set <vmid> -vga std && qm start <vmid>

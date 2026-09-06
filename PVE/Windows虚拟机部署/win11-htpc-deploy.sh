@@ -4,7 +4,7 @@
 #
 # 适用:Proxmox VE 8.x/9.x,配合 Win11客厅HTPC.md(第 4 节)使用
 #
-# 本脚本创建(不包含系统安装后的直通接入,那一步由 win11-htpc-attach.sh 负责):
+# 本脚本创建(不包含系统安装后的直通接入,那一步由 scripts/attach-all.sh 负责):
 #   q35 + OVMF(UEFI) + Secure Boot(pre-enrolled keys) + TPM 2.0
 #   VirtIO SCSI + IO Thread + host CPU + VirtIO 网卡 + Win11/virtio-win 双光驱
 #
@@ -242,4 +242,5 @@ echo
 log "下一步:"
 echo "  1. Web UI 打开该 VM 的 noVNC 控制台 → 启动"
 printf '  2. 按文档第 5 节安装 Windows(磁盘不可见时加载 virtio-win 的 vioscsi\\w11\\amd64)\n'
-echo "  3. 装完系统后运行第二阶段脚本接入直通设备: win11-htpc-attach.sh --vmid $VMID"
+echo "  3. 装完系统后运行直通接入(客机无关,scripts/ 家族):"
+echo "     bash /root/scripts/attach-all.sh --vmid $VMID"

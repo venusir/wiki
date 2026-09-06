@@ -11,7 +11,7 @@
 | [bazzite-init.sh](bazzite-init.sh) | Bazzite 客机内一键初始化(直通盘 ext4+挂载 / sshd / Steam 权限) |
 | [Steam硬盘库.md](Steam硬盘库.md) | 案例:直通硬盘添加 Steam 游戏库(Flatpak 权限 + 无显卡回桌面模式) |
 
-**直通接入复用** [win11-htpc-attach.sh](../Windows虚拟机部署/win11-htpc-attach.sh)(该脚本与客机系统无关,名字为历史遗留)——指南 §6 有用法。
+**直通接入统一使用** [scripts/attach-all.sh](../scripts/attach-all.sh)(客机无关;另有 attach-gpu/usb/disk 原语)——指南 §6 有用法。
 
 ## 快速开始
 
@@ -21,8 +21,10 @@ bash bazzite-deploy.sh --dry-run && bash bazzite-deploy.sh
 
 # 2. noVNC 安装(指南 §4)→ 启用 sshd(§5)
 
-# 3. 直通接入(关机状态,宿主)
-bash /root/win11-htpc-attach.sh --vmid 100 --dry-run && bash /root/win11-htpc-attach.sh --vmid 100
+# 3. 拉取直通脚本并接入(关机状态,宿主)
+mkdir -p /root/scripts && cd /root/scripts
+for s in attach-gpu attach-usb attach-disk attach-all; do curl -fLO "https://raw.githubusercontent.com/venusir/wiki/main/PVE/scripts/$s.sh"; done
+bash /root/scripts/attach-all.sh --vmid 100 --dry-run && bash /root/scripts/attach-all.sh --vmid 100
 
 # 4. 客机内初始化(SSH)
 sudo ./bazzite-init.sh --disk /dev/disk/by-id/<盘>

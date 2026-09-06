@@ -15,7 +15,7 @@
   → 踩坑速查(§9) → 命令速查(§10) → 附录:客厅方案决策档案(§11,已放弃)
 ```
 
-- 脚本:**win11-htpc-deploy.sh**(建机)、**win11-htpc-attach.sh**(直通接入)——通用可用,名称沿用原项目,不影响使用;使用前拉 GitHub 最新版
+- 脚本:**win11-htpc-deploy.sh**(Windows 建机)、**[scripts/attach-all.sh](../scripts/attach-all.sh)**(直通接入,客机无关;另有 gpu/usb/disk 原语)——使用前拉 GitHub 最新版
 - Windows 10 与 11 差异已内嵌标注
 
 ## 2. 宿主机前置(一次性)
@@ -68,8 +68,7 @@ bash win11-htpc-deploy.sh              # 输 Y 创建
 **⚠️ 脚本异常先核对版本**(历史 bug:静默退出/detect_iso 非零/pvesm path 传存储名返回空/名称正则漏空格,均已修复):
 
 ```bash
-grep -c storage.cfg win11-htpc-deploy.sh        # ≥1 为新版
-grep -c 'name:.*win11-htpc' win11-htpc-attach.sh  # 新版特征
+grep -c storage.cfg win11-htpc-deploy.sh        # ≥1 为新版(attach-all 家族为 scripts/ 新脚本,无需版本核对)
 ```
 
 ## 5. noVNC 安装系统
@@ -131,9 +130,10 @@ grep -c 'name:.*win11-htpc' win11-htpc-attach.sh  # 新版特征
 
 物理准备:HDMI/DP 接直通显卡口;USB 设备插宿主。
 
+> 脚本获取:见目录 README 快速开始(拉取到 /root/scripts 后运行)
 ```bash
-bash win11-htpc-attach.sh --vmid <vmid> --dry-run    # 先审
-bash win11-htpc-attach.sh --vmid <vmid>              # 输 Y;交互选直通盘
+bash /root/scripts/attach-all.sh --vmid <vmid> --dry-run    # 先审
+bash /root/scripts/attach-all.sh --vmid <vmid>              # 输 Y;交互选直通盘
 ```
 
 自动完成:显卡直通(x-vga=1,pcie=1)+ HDMI 音频 + 显示置 none + USB 设备 + 直通盘 + 开机自启。
@@ -197,7 +197,7 @@ startup: order=1
 ```bash
 # 阶段 A / B
 bash win11-htpc-deploy.sh --dry-run && bash win11-htpc-deploy.sh
-bash win11-htpc-attach.sh --vmid <vmid> --dry-run && bash win11-htpc-attach.sh --vmid <vmid>
+bash /root/scripts/attach-all.sh --vmid <vmid> --dry-run && bash /root/scripts/attach-all.sh --vmid <vmid>
 
 # 回退/恢复直通
 qm stop <vmid> && qm set <vmid> -delete hostpci0 && qm set <vmid> -vga std && qm start <vmid>

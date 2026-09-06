@@ -1,6 +1,7 @@
 # PVE USB 设备直通通用指南(Xbox 无线适配器为例)
 
 > 通用性:USB 直通姿势适用于任意 USB 设备;Xbox 无线适配器(`045e:02fe`)为完整案例
+> **脚本化**:挂载/移除可用 [scripts/attach-usb.sh](scripts/attach-usb.sh)(--vidpid,attach|detach)
 > 实测环境:PVE 9.2;Xbox 无线适配器 + Series X|S 手柄;Windows 与 Linux(Bazzite)双客户机经验
 > 关联:显卡直通见 [显卡直通.md](显卡直通.md),硬盘直通见 [硬盘直通.md](硬盘直通.md)
 

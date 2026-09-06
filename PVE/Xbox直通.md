@@ -166,4 +166,4 @@ LED 快闪后按住手柄顶部配对键即可连接。
 
 - [Windows虚拟机部署/Windows10-11虚拟机部署指南.md](Windows虚拟机部署/Windows10-11虚拟机部署指南.md) — 完整 Windows 部署流程
 - [显卡直通.md](显卡直通.md) / [硬盘直通.md](硬盘直通.md)
-- [Bazzite直通硬盘Steam库.md](Bazzite直通硬盘Steam库.md) — Linux 客户机直通盘使用案例
+- [Bazzite虚拟机部署/Steam硬盘库.md](Bazzite虚拟机部署/Steam硬盘库.md) — Linux 客户机直通盘使用案例

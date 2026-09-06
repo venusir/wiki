@@ -1,5 +1,7 @@
 # PVE + Bazzite 直通硬盘添加 Steam 游戏库
 
+> ⚠️ **方案状态**:Bazzite 游戏 VM 已退役(2026-09,流程沿革见 [Windows虚拟机部署/Windows10-11虚拟机部署指南.md](../Windows虚拟机部署/Windows10-11虚拟机部署指南.md) §11)。本篇作为 **Linux 桌面客机 + Flatpak Steam + 直通盘**操作案例存档,通用直通姿势以 [显卡直通](../显卡直通.md) / [硬盘直通](../硬盘直通.md) 为准。
+>
 > 存档日期：2026-06-28
 >
 > 来源：DeepSeek 对话分享 `846945okfrhgwkq7se`
@@ -43,8 +45,11 @@ Steam 大屏模式无添加按钮
 ### 步骤 1：临时禁用直通显卡，进入 PVE 控制台
 
 1. PVE → 关机 Bazzite 虚拟机
-2. **硬件 → PCI 设备（显卡）→ 编辑 → 取消勾选「启用」**
-3. **硬件 → 显示 → 设为「标准 VGA (std)」**
+2. **⚠️ PVE GUI 的 PCI 设备没有「启用」勾选项**——禁用/恢复显卡用命令行(回退法详见 [显卡直通](../显卡直通.md) §6):
+   ```bash
+   qm stop <vmid> && qm set <vmid> -delete hostpci0 && qm set <vmid> -vga std && qm start <vmid>
+   ```
+3. **硬件 → 显示 → 设为「标准 VGA (std)」**(如未随 2 一并设置)
 4. 开机
 
 > **原理**：禁用物理显卡后，Bazzite 会自动回退到 PVE 虚拟显卡输出，PVE 控制台就能看到画面。
@@ -124,9 +129,11 @@ flatpak override --user --filesystem=/mnt/games com.valvesoftware.Steam
 ### 步骤 6：恢复显卡直通
 
 1. 关机 Bazzite 虚拟机
-2. PVE → **硬件 → PCI 设备（显卡）→ 编辑 → 勾选「启用」**
-3. PVE → **硬件 → 显示 → 设为「无 (none)」**
-4. 开机，将 HDMI/DP 线接到直通显卡的物理输出
+2. 命令行恢复直通(GUI 无「启用」勾选,详见 [显卡直通](../显卡直通.md)):
+   ```bash
+   qm stop <vmid> && qm set <vmid> -hostpci0 <显卡地址>,pcie=1,x-vga=1 && qm set <vmid> -vga none && qm start <vmid>
+   ```
+3. 开机，将 HDMI/DP 线接到直通显卡的物理输出
 
 ---
 

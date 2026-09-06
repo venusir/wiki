@@ -38,5 +38,5 @@ bash win11-htpc-attach.sh --vmid 200
 - [显卡直通](../显卡直通.md) — 通用:显卡 PCIe 直通(宿主准备/挂载/回退/排错)
 - [硬盘直通](../硬盘直通.md) — 通用:整盘/控制器直通与客户机侧使用
 - [Xbox直通](../Xbox直通.md) — 通用:USB 直通姿势 + Xbox 适配器完整案例(含 Linux xone 深度排错)
-- [Bazzite直通硬盘Steam库](../Bazzite直通硬盘Steam库.md) — Linux 客户机直通盘案例
+- [Bazzite虚拟机部署/Steam硬盘库](../Bazzite虚拟机部署/Steam硬盘库.md) — Linux 客户机直通盘案例
 - [Flirc遥控开关机](../Flirc遥控开关机.md) — PVE API 遥控开机/关机方案

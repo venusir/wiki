@@ -1,5 +1,7 @@
 # PVE Win11 企业版全新部署指南(两阶段脚本版)
 
+> 📦 **存档状态(2026-09-05):本文为特定场景(企业版重装)的过程存档**。通用 Win10/11 部署流程以 [Windows10-11虚拟机部署指南.md](Windows10-11虚拟机部署指南.md) 为准,两阶段脚本在同目录可直接复用。
+
 > 存档日期：2026-09-05(全流程实测 + 踩坑修订版)
 >
 > 环境：PVE 9.2(内核 7.0.6-2-pve)+ i3-12100 + RX 6650 XT(03:00.0 显卡 / 03:00.1 音频)+ Xbox 无线适配器(`045e:02fe`)+ WD 1TB 直通盘
@@ -22,8 +24,8 @@
 
 ```bash
 cd /root
-curl -fLO https://raw.githubusercontent.com/venusir/wiki/main/PVE/win11-htpc-deploy.sh
-curl -fLO https://raw.githubusercontent.com/venusir/wiki/main/PVE/win11-htpc-attach.sh
+curl -fLO "https://raw.githubusercontent.com/venusir/wiki/main/PVE/Windows%E8%99%9A%E6%8B%9F%E6%9C%BA%E9%83%A8%E7%BD%B2/win11-htpc-deploy.sh"
+curl -fLO "https://raw.githubusercontent.com/venusir/wiki/main/PVE/Windows%E8%99%9A%E6%8B%9F%E6%9C%BA%E9%83%A8%E7%BD%B2/win11-htpc-attach.sh"
 ```
 
 ---
@@ -41,7 +43,7 @@ lsusb | grep -i 045e
 ls -l /dev/disk/by-id/ata-WDC_WD10EZEX-08WN4A0_WD-WCC6Y2SSVDTP
 ```
 
-全部正常即可继续。grep 不到 vfio-pci 就回查 Win11客厅HTPC.md 第 2 节(grub/vfio.conf/initramfs)。
+全部正常即可继续。grep 不到 vfio-pci 就回查 [Windows10-11虚拟机部署指南.md](Windows10-11虚拟机部署指南.md) 第 2 节(grub/vfio.conf/initramfs)。
 
 ---
 
@@ -201,7 +203,7 @@ qm start 200
 
 ## 8. 客厅软件与自启链
 
-Playnite 安装/平台登录 → 全屏自启(`Playnite.DesktopApp.exe --startfullscreen` + 启动文件夹)→ Edge `--app=<网址>` 流媒体条目 → HEVC 视频扩展(`ms-windows-store://pdp/?ProductId=9n4wgh0z6vhq`)→ Flirc 遥控流媒体。详见 [Win11客厅HTPC.md](Win11客厅HTPC.md) 第 9/10 节。
+Playnite 安装/平台登录 → 全屏自启(`Playnite.DesktopApp.exe --startfullscreen` + 启动文件夹)→ Edge `--app=<网址>` 流媒体条目 → HEVC 视频扩展(`ms-windows-store://pdp/?ProductId=9n4wgh0z6vhq`)→ Flirc 遥控流媒体。详见 [Win11客厅HTPC方案存档.md](Win11客厅HTPC方案存档.md) 第 9/10 节。
 
 **自启链终验**:宿主机断电重启 → VM 自动启动 → 自动登录 → Playnite 全屏。
 
@@ -258,6 +260,6 @@ qm config 200 | grep -E '^(hostpci|usb0|vga|scsi1|startup|boot|agent)'
 
 ## 相关文档
 
-- [Win11客厅HTPC.md](Win11客厅HTPC.md) — 主方案文档(Playnite/影音/DRM/自启链/宿主机直通准备)
+- [Win11客厅HTPC方案存档.md](Win11客厅HTPC方案存档.md) — 客厅方案存档(Playnite/影音/DRM/自启链/宿主机直通准备)
 - [win11-htpc-deploy.sh](win11-htpc-deploy.sh) / [win11-htpc-attach.sh](win11-htpc-attach.sh) — 两阶段部署脚本
-- [Xbox适配器直通Bazzite.md](Xbox适配器直通Bazzite.md) — Linux 客户机适配器排错对照参考
+- [Xbox适配器直通Bazzite.md](../Xbox适配器直通Bazzite.md) — Linux 客户机适配器排错对照参考

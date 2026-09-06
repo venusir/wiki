@@ -1,5 +1,8 @@
 # PVE 打造 Win11 客厅 HTPC(RX 6650 XT 直通 + Playnite)
 
+> ⚠️ **方案状态(2026-09-05):已放弃**「PVE Win11 兼顾影音与游戏」客厅方案——桌面网页与电视遥控(d-pad)交互不兼容,体验不达预期,流媒体回归电视原生 App。
+> 本文作为完整部署经验**存档保留**;通用部署流程见 [Windows10-11虚拟机部署指南.md](Windows10-11虚拟机部署指南.md),脚本与重装记录同在本目录。
+
 > 存档日期：2026-09-05
 >
 > 适用环境：Proxmox VE 8.x / 9.x + Intel i3-12100 + RX 6650 XT + Xbox 无线适配器（`045e:02fe`）
@@ -472,7 +475,7 @@ Flirc 键位映射建议（在你已有的 Flirc 配置上调整）：
 
 ## 相关文档（扩展阅读，非前置依赖）
 
-- [Win11企业版重装](Win11企业版重装.md) — 重装企业版以启用远程桌面(RDP)的实测流程与踩坑记录
-- [Xbox适配器直通Bazzite](Xbox适配器直通Bazzite.md) — Linux 客户机下手柄适配器固件/SELinux 排错（Windows 下无需这些步骤，作为对照参考）
-- [Bazzite直通硬盘Steam库](Bazzite直通硬盘Steam库.md) — 直通盘挂载与「禁用显卡回控制台」背景
-- [Flirc遥控启动虚拟机](Flirc遥控启动虚拟机.md) — Flirc + PVE API 遥控开机方案（本文第 9 节遥控方案基于同一硬件）
+- [Win11重装部署存档](Win11重装部署存档.md) — 企业版重装的实测流程与踩坑记录
+- [Xbox适配器直通Bazzite](../Xbox适配器直通Bazzite.md) — Linux 客户机下手柄适配器固件/SELinux 排错（Windows 下无需这些步骤，作为对照参考）
+- [Bazzite直通硬盘Steam库](../Bazzite直通硬盘Steam库.md) — 直通盘挂载与「禁用显卡回控制台」背景
+- [Flirc遥控启动虚拟机](../Flirc遥控启动虚拟机.md) — Flirc + PVE API 遥控开机方案（本文第 9 节遥控方案基于同一硬件）

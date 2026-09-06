@@ -1,22 +1,37 @@
 # PVE Bazzite 虚拟机部署
 
-> **方案状态(2026-09-05)**:Bazzite 游戏 VM 已退役。原「Bazzite 客厅游戏机」目标先后尝试 Windows 方案后一并放弃(沿革见 [Windows虚拟机部署/Windows10-11虚拟机部署指南.md](../Windows虚拟机部署/Windows10-11虚拟机部署指南.md) §11)。
-> 本目录收录 Bazzite/Linux 桌面客机的**操作案例存档**,通用知识不重复收录,一律指向 PVE 顶层通用指南。
+> **方案状态(2026-09-05)**:Bazzite 游戏机**重建中**——KVM 全虚拟化 + Deck 游戏版(LXC 不可行:Bazzite 是完整桌面 OS,显卡独占直通仅 KVM 支持)。此前 Win11 客厅方案已放弃,沿革见 [Windows虚拟机部署/Windows10-11虚拟机部署指南.md](../Windows虚拟机部署/Windows10-11虚拟机部署指南.md) §11。
 
 ## 目录内容
 
 | 文件 | 说明 |
 | --- | --- |
+| [Bazzite部署指南.md](Bazzite部署指南.md) | ⭐ 完整部署教程:建机 → 安装 → 直通接入 → 点亮与配置 → 排错 |
+| [bazzite-deploy.sh](bazzite-deploy.sh) | 宿主侧一键建机脚本(dry-run/确认闸门,LINUX 客机版) |
+| [bazzite-init.sh](bazzite-init.sh) | Bazzite 客机内一键初始化(直通盘 ext4+挂载 / sshd / Steam 权限) |
 | [Steam硬盘库.md](Steam硬盘库.md) | 案例:直通硬盘添加 Steam 游戏库(Flatpak 权限 + 无显卡回桌面模式) |
+
+**直通接入复用** [win11-htpc-attach.sh](../Windows虚拟机部署/win11-htpc-attach.sh)(该脚本与客机系统无关,名字为历史遗留)——指南 §6 有用法。
+
+## 快速开始
+
+```bash
+# 1. 建机(宿主)
+bash bazzite-deploy.sh --dry-run && bash bazzite-deploy.sh
+
+# 2. noVNC 安装(指南 §4)→ 启用 sshd(§5)
+
+# 3. 直通接入(关机状态,宿主)
+bash /root/win11-htpc-attach.sh --vmid 100 --dry-run && bash /root/win11-htpc-attach.sh --vmid 100
+
+# 4. 客机内初始化(SSH)
+sudo ./bazzite-init.sh --disk /dev/disk/by-id/<盘>
+```
 
 ## 通用参考(客户机无关,PVE 顶层)
 
-- [显卡直通](../显卡直通.md) — GPU PCIe 直通/回退法(本目录案例的"禁用显卡回控制台"即此法)
+- [显卡直通](../显卡直通.md) — GPU PCIe 直通/回退法
 - [硬盘直通](../硬盘直通.md) — 整盘/控制器直通
 - [Xbox直通](../Xbox直通.md) — USB 直通(含 Linux xone 深度排错)
 - [Flirc遥控开关机](../Flirc遥控开关机.md) — 宿主侧遥控电源管理
-
-## 关联说明
-
-- Bazzite 是 Linux 客机:VM 创建/驱动链/直通姿势与 Windows 客机基本一致,流程参照 [Windows虚拟机部署/Windows10-11虚拟机部署指南.md](../Windows虚拟机部署/Windows10-11虚拟机部署指南.md)(仅客机内系统配置不同)
-- 若未来重建 Bazzite/Linux 游戏机,可将本目录扩展为完整部署指南(README + 指南 + 脚本的形态,与 Windows 目录对仗)
+- [Windows虚拟机部署/](../Windows虚拟机部署/) — Windows 客机完整流程(VM 创建/直通姿势互通)

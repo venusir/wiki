@@ -151,4 +151,4 @@ qm config <vmid> | grep -E '^(hostpci|usb|vga|scsi|startup|boot|agent|ostype)'
 - [README.md](README.md) — 目录索引与快速开始
 - [Win11客厅HTPC方案存档.md](Win11客厅HTPC方案存档.md) — 客厅方案全记录(已放弃;含双遥控/流媒体/DRM 经验)
 - [Win11重装部署存档.md](Win11重装部署存档.md) — 企业版重装专项存档
-- [显卡直通](../显卡直通.md) / [硬盘直通](../硬盘直通.md) / [Xbox无线适配器直通](../Xbox无线适配器直通.md) — PVE 通用直通指南(客户机无关)
+- [显卡直通](../显卡直通.md) / [硬盘直通](../硬盘直通.md) / [Xbox直通](../Xbox直通.md) — PVE 通用直通指南(客户机无关)

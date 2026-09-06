@@ -262,4 +262,4 @@ qm config 200 | grep -E '^(hostpci|usb0|vga|scsi1|startup|boot|agent)'
 
 - [Win11客厅HTPC方案存档.md](Win11客厅HTPC方案存档.md) — 客厅方案存档(Playnite/影音/DRM/自启链/宿主机直通准备)
 - [win11-htpc-deploy.sh](win11-htpc-deploy.sh) / [win11-htpc-attach.sh](win11-htpc-attach.sh) — 两阶段部署脚本
-- [Xbox无线适配器直通](../Xbox无线适配器直通.md) — USB/适配器直通通用指南(含 Linux xone 深度排错)
+- [Xbox直通](../Xbox直通.md) — USB/适配器直通通用指南(含 Linux xone 深度排错)

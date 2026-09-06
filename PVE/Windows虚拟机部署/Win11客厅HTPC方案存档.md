@@ -476,6 +476,6 @@ Flirc 键位映射建议（在你已有的 Flirc 配置上调整）：
 ## 相关文档（扩展阅读，非前置依赖）
 
 - [Win11重装部署存档](Win11重装部署存档.md) — 企业版重装的实测流程与踩坑记录
-- [Xbox无线适配器直通](../Xbox无线适配器直通.md) — USB/适配器直通通用指南（含 Linux xone 深度排错，Windows 下无需这些步骤）
+- [Xbox直通](../Xbox直通.md) — USB/适配器直通通用指南（含 Linux xone 深度排错，Windows 下无需这些步骤）
 - [Bazzite直通硬盘Steam库](../Bazzite直通硬盘Steam库.md) — 直通盘挂载与「禁用显卡回控制台」背景
 - [Flirc遥控启动虚拟机](../Flirc遥控启动虚拟机.md) — Flirc + PVE API 遥控开机方案（本文第 9 节遥控方案基于同一硬件）
